@@ -11,17 +11,17 @@ define(function(require, exports, module) {
             'background': '#fbfbfb',
 
             'root-color': 'white',
-            'root-background': hsl(h, 37, 60),
-            'root-stroke': hsl(h, 37, 60),
+            'root-background': hsl(h, 95, 63),
+            'root-stroke': 'none',
             'root-font-size': 16,
             'root-padding': compat ? [6, 12] : [12, 24],
             'root-margin': compat ? 10 : [30, 100],
             'root-radius': 5,
             'root-space': 10,
 
-            'main-color': 'black',
+            'main-color': hsl(h, 19, 34),
             'main-background': hsl(h, 33, 95),
-            'main-stroke': hsl(h, 37, 60),
+            'main-stroke': hsl(h, 24, 83),
             'main-stroke-width': 1,
             'main-font-size': 14,
             'main-padding': [6, 20],
@@ -29,7 +29,7 @@ define(function(require, exports, module) {
             'main-radius': 3,
             'main-space': 5,
 
-            'sub-color': 'black',
+            'sub-color': hsl(h, 19, 34),
             'sub-background': 'transparent',
             'sub-stroke': 'none',
             'sub-font-size': 12,
@@ -38,13 +38,13 @@ define(function(require, exports, module) {
             'sub-radius': 5,
             'sub-space': 5,
 
-            'connect-color': hsl(h, 37, 60),
+            'connect-color': hsl(h, 24, 83),
             'connect-width': 1,
             'connect-radius': 5,
 
-            'selected-stroke': hsl(h, 26, 30),
+            'selected-stroke': hsl(h, 19, 34),
             'selected-stroke-width': '3',
-            'blur-selected-stroke': hsl(h, 10, 60),
+            'blur-selected-stroke': hsl(h, 19, 34),
 
             'marquee-background': hsl(h, 100, 80).set('a', 0.1),
             'marquee-stroke': hsl(h, 37, 60),

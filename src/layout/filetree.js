@@ -12,7 +12,7 @@ define(function(require, exports, module) {
 
             doLayout: function(parent, children, round) {
                 var pBox = parent.getContentBox();
-                var indent = 20;
+                var indent = 0;
 
                 parent.setVertexOut(new kity.Point(pBox.left + indent, dir > 0 ? pBox.bottom : pBox.top));
                 parent.setLayoutVectorOut(new kity.Vector(0, dir));
@@ -22,7 +22,6 @@ define(function(require, exports, module) {
                 children.forEach(function(child) {
                     var cbox = child.getContentBox();
                     child.setLayoutTransform(new kity.Matrix());
-
                     child.setVertexIn(new kity.Point(cbox.left, cbox.cy));
                     child.setLayoutVectorIn(new kity.Vector(1, 0));
                 });

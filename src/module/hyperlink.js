@@ -91,16 +91,7 @@ define(function(require, exports, module) {
                 update: function(link, node, box) {
 
                     var href = node.getData('hyperlink');
-                    link.setHref('#');
-
-                    var allowed = ['^http:', '^https:', '^ftp:', '^mailto:'];
-                    for (var i = 0; i < allowed.length; i++) {
-                        var regex = new RegExp(allowed[i]);
-                        if (regex.test(href)) {
-                            link.setHref(href);
-                            break;
-                        }
-                    }
+                    link.setHref(href);
                     var title = node.getData('hyperlinkTitle');
 
                     if (title) {

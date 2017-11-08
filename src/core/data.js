@@ -232,7 +232,7 @@ define(function(require, exports, module) {
             json = compatibility(json);
 
             this.importNode(this._root, json.root);
-
+            
             this.setTemplate(json.template || 'default');
             this.setTheme(json.theme || null);
             this.refresh();

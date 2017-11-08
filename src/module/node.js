@@ -77,24 +77,37 @@ define(function(require, exports, module) {
      */
     var RemoveNodeCommand = kity.createClass('RemoverNodeCommand', {
         base: Command,
-        execute: function(km) {
-            var nodes = km.getSelectedNodes();
-            var ancestor = MinderNode.getCommonAncestor.apply(null, nodes);
-            var index = nodes[0].getIndex();
+        execute: function(km, interceptor) {
+            var fun = function(km) {
+                var nodes = km.getSelectedNodes();
+                var ancestor = MinderNode.getCommonAncestor.apply(null, nodes);
+                var index = nodes[0].getIndex();
 
-            nodes.forEach(function(node) {
-                if (!node.isRoot()) km.removeNode(node);
-            });
-            if (nodes.length == 1) {
-                var selectBack = ancestor.children[index - 1] || ancestor.children[index];
-                km.select(selectBack || ancestor || km.getRoot(), true);
-            } else {
-                km.select(ancestor || km.getRoot(), true);
+                nodes.forEach(function(node) {
+                    if (!node.isRoot()) km.removeNode(node);
+                });
+                if (nodes.length == 1) {
+                    var selectBack = ancestor.children[index - 1] || ancestor.children[index];
+                    km.select(selectBack || ancestor || km.getRoot(), true);
+                } else {
+                    km.select(ancestor || km.getRoot(), true);
+                }
+                km.layout(600);
             }
-            km.layout(600);
+            var judge = true;
+            if(typeof interceptor == 'function'){
+                judge = false;
+                this.execute = function (km) {
+                    interceptor(fun);
+                }
+            }
+            if (judge) {
+                fun(km);
+            }
         },
         queryState: function(km) {
             var selectedNode = km.getSelectedNode();
+            
             return selectedNode && !selectedNode.isRoot() ? 0 : -1;
         }
     });

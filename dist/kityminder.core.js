@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.45 - 2017-08-09
+ * kityminder - v1.4.43 - 2017-11-08
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -467,7 +467,9 @@ _p[9] = {
                 var cmd = this._getCommand(name);
                 if (cmd) {
                     var queryCmd = cmd["query" + type];
-                    if (queryCmd) return queryCmd.apply(cmd, [ this ].concat(args));
+                    if (queryCmd) {
+                        return queryCmd.apply(cmd, [ this ].concat(args));
+                    }
                 }
                 return 0;
             },
@@ -3995,7 +3997,7 @@ _p[37] = {
                 base: Layout,
                 doLayout: function(parent, children, round) {
                     var pBox = parent.getContentBox();
-                    var indent = 20;
+                    var indent = 0;
                     parent.setVertexOut(new kity.Point(pBox.left + indent, dir > 0 ? pBox.bottom : pBox.top));
                     parent.setLayoutVectorOut(new kity.Vector(0, dir));
                     if (!children.length) return;
@@ -5536,15 +5538,7 @@ _p[48] = {
                     },
                     update: function(link, node, box) {
                         var href = node.getData("hyperlink");
-                        link.setHref("#");
-                        var allowed = [ "^http:", "^https:", "^ftp:", "^mailto:" ];
-                        for (var i = 0; i < allowed.length; i++) {
-                            var regex = new RegExp(allowed[i]);
-                            if (regex.test(href)) {
-                                link.setHref(href);
-                                break;
-                            }
-                        }
+                        link.setHref(href);
                         var title = node.getData("hyperlinkTitle");
                         if (title) {
                             title = [ title, "(", href, ")" ].join("");
@@ -5995,20 +5989,32 @@ _p[52] = {
      */
         var RemoveNodeCommand = kity.createClass("RemoverNodeCommand", {
             base: Command,
-            execute: function(km) {
-                var nodes = km.getSelectedNodes();
-                var ancestor = MinderNode.getCommonAncestor.apply(null, nodes);
-                var index = nodes[0].getIndex();
-                nodes.forEach(function(node) {
-                    if (!node.isRoot()) km.removeNode(node);
-                });
-                if (nodes.length == 1) {
-                    var selectBack = ancestor.children[index - 1] || ancestor.children[index];
-                    km.select(selectBack || ancestor || km.getRoot(), true);
-                } else {
-                    km.select(ancestor || km.getRoot(), true);
+            execute: function(km, interceptor) {
+                var fun = function(km) {
+                    var nodes = km.getSelectedNodes();
+                    var ancestor = MinderNode.getCommonAncestor.apply(null, nodes);
+                    var index = nodes[0].getIndex();
+                    nodes.forEach(function(node) {
+                        if (!node.isRoot()) km.removeNode(node);
+                    });
+                    if (nodes.length == 1) {
+                        var selectBack = ancestor.children[index - 1] || ancestor.children[index];
+                        km.select(selectBack || ancestor || km.getRoot(), true);
+                    } else {
+                        km.select(ancestor || km.getRoot(), true);
+                    }
+                    km.layout(600);
+                };
+                var judge = true;
+                if (typeof interceptor == "function") {
+                    judge = false;
+                    this.execute = function(km) {
+                        interceptor(fun);
+                    };
                 }
-                km.layout(600);
+                if (judge) {
+                    fun(km);
+                }
             },
             queryState: function(km) {
                 var selectedNode = km.getSelectedNode();
@@ -6298,13 +6304,13 @@ _p[55] = {
             var minder = this;
             // Designed by Akikonata
             // [MASK, BACK]
-            var PRIORITY_COLORS = [ null, [ "#FF1200", "#840023" ], // 1 - red
-            [ "#0074FF", "#01467F" ], // 2 - blue
-            [ "#00AF00", "#006300" ], // 3 - green
-            [ "#FF962E", "#B25000" ], // 4 - orange
-            [ "#A464FF", "#4720C4" ], // 5 - purple
-            [ "#A3A3A3", "#515151" ], // 6,7,8,9 - gray
-            [ "#A3A3A3", "#515151" ], [ "#A3A3A3", "#515151" ], [ "#A3A3A3", "#515151" ] ];
+            var PRIORITY_COLORS = [ null, [ "#FB6362", "#FB6362" ], // 1 - red
+            [ "#98D4FD", "#98D4FD" ], // 2 - blue
+            [ "#00CF9B", "#00CF9B" ], // 3 - green
+            [ "#F8A900", "#F8A900" ], // 4 - orange
+            [ "#98A7FD", "#98A7FD" ], // 5 - purple
+            [ "#A2B0C4", "#A2B0C4" ], // 6,7,8,9 - gray
+            [ "#A2B0C4", "#A2B0C4" ], [ "#A2B0C4", "#A2B0C4" ], [ "#A2B0C4", "#A2B0C4" ] ];
             // hue from 1 to 5
             // jscs:disable maximumLineLength
             var BACK_PATH = "M0,13c0,3.866,3.134,7,7,7h6c3.866,0,7-3.134,7-7V7H0V13z";
@@ -6326,20 +6332,21 @@ _p[55] = {
                     var white, back, mask, number;
                     // 4 layer
                     white = new kity.Path().setPathData(MASK_PATH).fill("white");
-                    back = new kity.Path().setPathData(BACK_PATH).setTranslate(.5, .5);
-                    mask = new kity.Path().setPathData(MASK_PATH).setOpacity(.8).setTranslate(.5, .5);
-                    number = new kity.Text().setX(this.width / 2 - .5).setY(this.height / 2).setTextAnchor("middle").setVerticalAlign("middle").setFontItalic(true).setFontSize(12).fill("white");
-                    this.addShapes([ back, mask, number ]);
+                    back = new kity.Circle(10).setTranslate(10, 10);
+                    //back = new kity.Path().setPathData(BACK_PATH).setTranslate(0.5, 0.5);
+                    //mask = new kity.Path().setPathData(MASK_PATH).setOpacity(0.8).setTranslate(0.5, 0.5);
+                    number = new kity.Text().setX(this.width / 2).setY(this.height / 2 + 1).setTextAnchor("middle").setVerticalAlign("middle").setFontSize(12).fill("white");
+                    this.addShapes([ back, number ]);
                     this.mask = mask;
                     this.back = back;
                     this.number = number;
                 },
                 setValue: function(value) {
-                    var back = this.back, mask = this.mask, number = this.number;
+                    var back = this.back, //mask = this.mask,
+                    number = this.number;
                     var color = PRIORITY_COLORS[value];
                     if (color) {
                         back.fill(color[1]);
-                        mask.fill(color[0]);
                     }
                     number.setContent(value);
                 }
@@ -6424,12 +6431,12 @@ _p[56] = {
             var minder = this;
             var PROGRESS_DATA = "progress";
             // Designed by Akikonata
-            var BG_COLOR = "#FFED83";
-            var PIE_COLOR = "#43BC00";
+            var BG_COLOR = "#FFFFFF";
+            var PIE_COLOR = "#20a0ff";
             var SHADOW_PATH = "M10,3c4.418,0,8,3.582,8,8h1c0-5.523-3.477-10-9-10S1,5.477,1,11h1C2,6.582,5.582,3,10,3z";
             var SHADOW_COLOR = "#8E8E8E";
             // jscs:disable maximumLineLength
-            var FRAME_PATH = "M10,0C4.477,0,0,4.477,0,10c0,5.523,4.477,10,10,10s10-4.477,10-10C20,4.477,15.523,0,10,0zM10,18c-4.418,0-8-3.582-8-8s3.582-8,8-8s8,3.582,8,8S14.418,18,10,18z";
+            var FRAME_PATH = "M0,0 L20,0 L20,20 L0,20 z";
             var FRAME_GRAD = new kity.LinearGradient().pipe(function(g) {
                 g.setStartPosition(0, 0);
                 g.setEndPosition(0, 1);
@@ -6444,29 +6451,106 @@ _p[56] = {
                 base: kity.Group,
                 constructor: function(value) {
                     this.callBase();
-                    this.setSize(20);
+                    this.setSize(14);
                     this.create();
                     this.setValue(value);
                     this.setId(utils.uuid("node_progress"));
                     this.translate(.5, .5);
+                    this.control();
                 },
                 setSize: function(size) {
                     this.width = this.height = size;
                 },
                 create: function() {
                     var bg, pie, shadow, frame, check;
-                    bg = new kity.Circle(9).fill(BG_COLOR);
-                    pie = new kity.Pie(9, 0).fill(PIE_COLOR);
-                    shadow = new kity.Path().setPathData(SHADOW_PATH).setTranslate(-10, -10).fill(SHADOW_COLOR);
-                    frame = new kity.Path().setTranslate(-10, -10).setPathData(FRAME_PATH).fill(FRAME_GRAD);
+                    bg = new kity.Rect().setRadius(4).setTranslate(-7, -7).setPosition(0, 0).setSize(14, 14).fill(BG_COLOR);
+                    pie = new kity.Rect().setRadius(4).setTranslate(-7, -7).setPosition(0, 0).setSize(14, 14).fill(PIE_COLOR);
+                    frame = new kity.Rect().setRadius(4).setTranslate(-7, -7).setPosition(0, 0).setSize(14, 14).stroke(PIE_COLOR);
                     check = new kity.Path().setTranslate(-10, -10).setPathData(CHECK_PATH).fill(CHECK_COLOR);
-                    this.addShapes([ bg, pie, shadow, check, frame ]);
+                    this.addShapes([ bg, pie, check, frame ]);
                     this.pie = pie;
                     this.check = check;
                 },
                 setValue: function(value) {
-                    this.pie.setAngle(-360 * (value - 1) / 8);
+                    if (value == 1) {
+                        this.pie.fill("#FFFFFF");
+                    } else if (value == 9) {
+                        this.pie.fill(PIE_COLOR);
+                    }
                     this.check.setVisible(value == 9);
+                },
+                control: function() {
+                    var progress = this;
+                    this.on("click", function(e) {
+                        minder.selectById([ progress.container.minderNode.getData("id") ], true);
+                        if (progress.container.minderNode.data.progress == 9) {
+                            progress.container.minderNode.setData("progress", 1);
+                            progress.setValue(1);
+                            if (progress.container != null) {
+                                var _func = function(node) {
+                                    if (node.getData("progress") != 1) {
+                                        node.setData("progress", 1);
+                                        var _items = node.rc.getItems();
+                                        for (var j in _items) {
+                                            if (_items[j].__KityClassName == "ProgressIcon") {
+                                                _items[j].setValue(1);
+                                            }
+                                        }
+                                        for (var i in node.children) {
+                                            var _node = node.children[i];
+                                            _func(_node);
+                                        }
+                                    }
+                                };
+                                for (var i in progress.container.minderNode.children) {
+                                    var _node = progress.container.minderNode.children[i];
+                                    _func(_node);
+                                }
+                            }
+                        } else {
+                            progress.container.minderNode.setData("progress", 9);
+                            progress.setValue(9);
+                            if (progress.container != null) {
+                                var _func = function(node) {
+                                    if (node.getData("progress") != 9) {
+                                        node.setData("progress", 9);
+                                        var _items = node.rc.getItems();
+                                        for (var j in _items) {
+                                            if (_items[j].__KityClassName == "ProgressIcon") {
+                                                _items[j].setValue(9);
+                                            }
+                                        }
+                                        for (var i in node.children) {
+                                            var _node = node.children[i];
+                                            _func(_node);
+                                        }
+                                    }
+                                };
+                                for (var i in progress.container.minderNode.children) {
+                                    var _node = progress.container.minderNode.children[i];
+                                    _func(_node);
+                                }
+                                var _func = function(node) {
+                                    var _node = node.parent;
+                                    if (_node != null) {
+                                        if (_node.getData("progress") != 9) {
+                                            _node.setData("progress", 9);
+                                            var _items = _node.rc.getItems();
+                                            for (var i in _items) {
+                                                if (_items[i].__KityClassName == "ProgressIcon") {
+                                                    _items[i].setValue(9);
+                                                }
+                                            }
+                                        }
+                                        if (_node.parent != null) {
+                                            _func(_node);
+                                        }
+                                    }
+                                };
+                                _func(progress.container.minderNode);
+                            }
+                        }
+                    });
                 }
             });
             /**
@@ -6596,7 +6680,7 @@ _p[57] = {
                     } else {
                         a += "耀";
                         while (a.length % 32 !== 27) {
-                            a += "\x00";
+                            a += "\0";
                         }
                         a += "";
                     }
@@ -7138,7 +7222,7 @@ _p[60] = {
                 "impact,chicago": -.15,
                 "times new roman": -.1,
                 "arial black,avant garde": -.17,
-                "default": 0
+                default: 0
             },
             ie: {
                 10: {
@@ -7147,7 +7231,7 @@ _p[60] = {
                     "impact,chicago": -.08,
                     "times new roman": .04,
                     "arial black,avant garde": -.17,
-                    "default": -.15
+                    default: -.15
                 },
                 11: {
                     "微软雅黑,Microsoft YaHei": -.17,
@@ -7157,7 +7241,7 @@ _p[60] = {
                     "times new roman": .04,
                     "sans-serif": -.16,
                     "arial black,avant garde": -.17,
-                    "default": -.15
+                    default: -.15
                 }
             },
             edge: {
@@ -7167,7 +7251,7 @@ _p[60] = {
                 "impact,chicago": -.08,
                 "sans-serif": -.16,
                 "arial black,avant garde": -.17,
-                "default": -.15
+                default: -.15
             },
             sg: {
                 "微软雅黑,Microsoft YaHei": -.15,
@@ -7176,7 +7260,7 @@ _p[60] = {
                 "impact,chicago": -.16,
                 "times new roman": -.03,
                 "arial black,avant garde": -.22,
-                "default": -.15
+                default: -.15
             },
             chrome: {
                 Mac: {
@@ -7185,7 +7269,7 @@ _p[60] = {
                     "impact,chicago": -.13,
                     "times new roman": -.1,
                     "arial black,avant garde": -.17,
-                    "default": 0
+                    default: 0
                 },
                 Win: {
                     "微软雅黑,Microsoft YaHei": -.15,
@@ -7194,7 +7278,7 @@ _p[60] = {
                     "comic sans ms": -.2,
                     "impact,chicago": -.12,
                     "times new roman": -.02,
-                    "default": -.15
+                    default: -.15
                 },
                 Lux: {
                     "andale mono": -.05,
@@ -7202,7 +7286,7 @@ _p[60] = {
                     "impact,chicago": -.13,
                     "times new roman": -.1,
                     "arial black,avant garde": -.17,
-                    "default": 0
+                    default: 0
                 }
             },
             firefox: {
@@ -7213,7 +7297,7 @@ _p[60] = {
                     "impact,chicago": -.15,
                     "arial black,avant garde": -.17,
                     "times new roman": -.1,
-                    "default": .05
+                    default: .05
                 },
                 Win: {
                     "微软雅黑,Microsoft YaHei": -.16,
@@ -7224,7 +7308,7 @@ _p[60] = {
                     "times new roman": -.22,
                     "sans-serif": -.22,
                     "arial black,avant garde": -.17,
-                    "default": -.16
+                    default: -.16
                 },
                 Lux: {
                     "宋体,SimSun": -.2,
@@ -7239,7 +7323,7 @@ _p[60] = {
                     "times new roman": -.2,
                     "sans-serif": -.2,
                     "arial black,avant garde": -.2,
-                    "default": -.16
+                    default: -.16
                 }
             }
         };
@@ -7537,7 +7621,7 @@ _p[61] = {
                     focusNode = focusNode || km.getRoot();
                     var viewport = km.getPaper().getViewPort();
                     var offset = focusNode.getRenderContainer().getRenderBox("view");
-                    var dx = viewport.center.x - offset.x - offset.width / 2, dy = viewport.center.y - offset.y;
+                    var dx = viewport.center.x - offset.x - offset.width / 2, dy = -offset.y + 10;
                     var dragger = km._viewDragger;
                     var duration = km.getOption("viewAnimationDuration");
                     dragger.move(new kity.Point(dx, dy), duration);
@@ -7616,7 +7700,6 @@ _p[61] = {
                         this._mousewheeltimer = setTimeout(function() {
                             me.fire("viewchanged");
                         }, 100);
-                        e.preventDefault();
                     },
                     "normal.dblclick readonly.dblclick": function(e) {
                         if (e.kityEvent.targetShape instanceof kity.Paper) {
@@ -7638,7 +7721,7 @@ _p[61] = {
                             width: this.getRenderTarget().clientWidth,
                             height: this.getRenderTarget().clientHeight
                         }, b = this._lastClientSize;
-                        this._viewDragger.move(new kity.Point((a.width - b.width) / 2 | 0, (a.height - b.height) / 2 | 0));
+                        this._viewDragger.move(new kity.Point((a.width - b.width) / 2 | 0, 0));
                         this._lastClientSize = a;
                     },
                     "selectionchange layoutallfinish": function(e) {
@@ -7898,8 +7981,8 @@ _p[64] = {
         var data = _p.r(12);
         var LINE_ENDING_SPLITER = /\r\n|\r|\n/;
         var EMPTY_LINE = "";
-        var NOTE_MARK_START = "<!--Note-->";
-        var NOTE_MARK_CLOSE = "<!--/Note-->";
+        var NOTE_MARK_START = "\x3c!--Note--\x3e";
+        var NOTE_MARK_CLOSE = "\x3c!--/Note--\x3e";
         function encode(json) {
             return _build(json, 1).join("\n");
         }
@@ -8528,8 +8611,8 @@ _p[67] = {
         var LINE_ENDING = "\r", LINE_ENDING_SPLITER = /\r\n|\r|\n/, TAB_CHAR = function(Browser) {
             if (Browser.gecko) {
                 return {
-                    REGEXP: new RegExp("^(	|" + String.fromCharCode(160, 160, 32, 160) + ")"),
-                    DELETE: new RegExp("^(	|" + String.fromCharCode(160, 160, 32, 160) + ")+")
+                    REGEXP: new RegExp("^(\t|" + String.fromCharCode(160, 160, 32, 160) + ")"),
+                    DELETE: new RegExp("^(\t|" + String.fromCharCode(160, 160, 32, 160) + ")+")
                 };
             } else if (Browser.ie || Browser.edge) {
                 // ie系列和edge比较特别，\t在div中会被直接转义成SPACE故只好使用SPACE来做处理
@@ -8645,7 +8728,7 @@ _p[67] = {
         function encode(json, level) {
             var local = "";
             level = level || 0;
-            local += repeat("	", level);
+            local += repeat("\t", level);
             local += encodeWrap(json.data.text) + LINE_ENDING;
             if (json.children) {
                 json.children.forEach(function(child) {
@@ -9040,23 +9123,23 @@ _p[76] = {
             return {
                 background: "#fbfbfb",
                 "root-color": "white",
-                "root-background": hsl(h, 37, 60),
-                "root-stroke": hsl(h, 37, 60),
+                "root-background": hsl(h, 95, 63),
+                "root-stroke": "none",
                 "root-font-size": 16,
                 "root-padding": compat ? [ 6, 12 ] : [ 12, 24 ],
                 "root-margin": compat ? 10 : [ 30, 100 ],
                 "root-radius": 5,
                 "root-space": 10,
-                "main-color": "black",
+                "main-color": hsl(h, 19, 34),
                 "main-background": hsl(h, 33, 95),
-                "main-stroke": hsl(h, 37, 60),
+                "main-stroke": hsl(h, 24, 83),
                 "main-stroke-width": 1,
                 "main-font-size": 14,
                 "main-padding": [ 6, 20 ],
                 "main-margin": compat ? 8 : 20,
                 "main-radius": 3,
                 "main-space": 5,
-                "sub-color": "black",
+                "sub-color": hsl(h, 19, 34),
                 "sub-background": "transparent",
                 "sub-stroke": "none",
                 "sub-font-size": 12,
@@ -9064,12 +9147,12 @@ _p[76] = {
                 "sub-margin": compat ? [ 4, 8 ] : [ 15, 20 ],
                 "sub-radius": 5,
                 "sub-space": 5,
-                "connect-color": hsl(h, 37, 60),
+                "connect-color": hsl(h, 24, 83),
                 "connect-width": 1,
                 "connect-radius": 5,
-                "selected-stroke": hsl(h, 26, 30),
+                "selected-stroke": hsl(h, 19, 34),
                 "selected-stroke-width": "3",
-                "blur-selected-stroke": hsl(h, 10, 60),
+                "blur-selected-stroke": hsl(h, 19, 34),
                 "marquee-background": hsl(h, 100, 80).set("a", .1),
                 "marquee-stroke": hsl(h, 37, 60),
                 "drop-hint-color": hsl(h, 26, 35),

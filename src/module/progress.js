@@ -7,20 +7,19 @@ define(function(require, exports, module) {
     var Command = require('../core/command');
     var Module = require('../core/module');
     var Renderer = require('../core/render');
-
     Module.register('ProgressModule', function() {
         var minder = this;
 
         var PROGRESS_DATA = 'progress';
 
         // Designed by Akikonata
-        var BG_COLOR = '#FFED83';
-        var PIE_COLOR = '#43BC00';
+        var BG_COLOR = '#FFFFFF';
+        var PIE_COLOR = '#20a0ff';
         var SHADOW_PATH = 'M10,3c4.418,0,8,3.582,8,8h1c0-5.523-3.477-10-9-10S1,5.477,1,11h1C2,6.582,5.582,3,10,3z';
         var SHADOW_COLOR = '#8E8E8E';
 
         // jscs:disable maximumLineLength
-        var FRAME_PATH = 'M10,0C4.477,0,0,4.477,0,10c0,5.523,4.477,10,10,10s10-4.477,10-10C20,4.477,15.523,0,10,0zM10,18c-4.418,0-8-3.582-8-8s3.582-8,8-8s8,3.582,8,8S14.418,18,10,18z';
+        var FRAME_PATH = 'M0,0 L20,0 L20,20 L0,20 z';
 
         var FRAME_GRAD = new kity.LinearGradient().pipe(function(g) {
             g.setStartPosition(0, 0);
@@ -39,11 +38,12 @@ define(function(require, exports, module) {
 
             constructor: function(value) {
                 this.callBase();
-                this.setSize(20);
+                this.setSize(14);
                 this.create();
                 this.setValue(value);
                 this.setId(utils.uuid('node_progress'));
                 this.translate(0.5, 0.5);
+                this.control();
             },
 
             setSize: function(size) {
@@ -54,36 +54,118 @@ define(function(require, exports, module) {
 
                 var bg, pie, shadow, frame, check;
 
-                bg = new kity.Circle(9)
+                bg = new kity.Rect()
+                    .setRadius(4)
+                    .setTranslate(-7, -7)
+                    .setPosition(0, 0)
+                    .setSize(14, 14)
                     .fill(BG_COLOR);
 
-                pie = new kity.Pie(9, 0)
+                pie = new kity.Rect()
+                    .setRadius(4)
+                    .setTranslate(-7, -7)
+                    .setPosition(0, 0)
+                    .setSize(14, 14)
                     .fill(PIE_COLOR);
 
-                shadow = new kity.Path()
-                    .setPathData(SHADOW_PATH)
-                    .setTranslate(-10, -10)
-                    .fill(SHADOW_COLOR);
-
-                frame = new kity.Path()
-                    .setTranslate(-10, -10)
-                    .setPathData(FRAME_PATH)
-                    .fill(FRAME_GRAD);
+                frame = new kity.Rect()
+                    .setRadius(4)
+                    .setTranslate(-7, -7)
+                    .setPosition(0, 0)
+                    .setSize(14, 14)
+                    .stroke(PIE_COLOR);
 
                 check = new kity.Path()
                     .setTranslate(-10, -10)
                     .setPathData(CHECK_PATH)
                     .fill(CHECK_COLOR);
 
-                this.addShapes([bg, pie, shadow, check, frame]);
+                this.addShapes([bg, pie, check, frame]);
                 this.pie = pie;
                 this.check = check;
             },
 
             setValue: function(value) {
-                this.pie.setAngle(-360 * (value - 1) / 8);
+                if(value == 1){
+                    this.pie.fill("#FFFFFF");
+                }else if(value == 9){
+                    this.pie.fill(PIE_COLOR);
+                }
                 this.check.setVisible(value == 9);
-            }
+            },
+            control: function() {
+                var progress = this;
+                this.on('click', function(e) {
+                    minder.selectById([progress.container.minderNode.getData("id")], true);
+                    if(progress.container.minderNode.data.progress==9){
+                        progress.container.minderNode.setData("progress", 1);
+                        progress.setValue(1);
+                        if(progress.container!=null){
+                            var _func = function(node){
+                                if(node.getData("progress")!=1){
+                                    node.setData("progress", 1);
+                                    var _items = node.rc.getItems();
+                                    for(var j in _items){
+                                        if(_items[j].__KityClassName == 'ProgressIcon'){
+                                            _items[j].setValue(1);
+                                        }
+                                    }
+                                    for(var i in node.children){
+                                        var _node = node.children[i];
+                                        _func(_node);
+                                    }
+                                }
+                            }
+                            for(var i in progress.container.minderNode.children){
+                                var _node = progress.container.minderNode.children[i];
+                                _func(_node);
+                            }
+                        }
+                    }else{
+                        progress.container.minderNode.setData("progress", 9);
+                        progress.setValue(9);
+                        if(progress.container!=null){
+                            var _func = function(node){
+                                if(node.getData("progress")!=9){
+                                    node.setData("progress", 9);
+                                    var _items = node.rc.getItems();
+                                    for(var j in _items){
+                                        if(_items[j].__KityClassName == 'ProgressIcon'){
+                                            _items[j].setValue(9);
+                                        }
+                                    }
+                                    for(var i in node.children){
+                                        var _node = node.children[i];
+                                        _func(_node);
+                                    }
+                                }
+                            }
+                            for(var i in progress.container.minderNode.children){
+                                var _node = progress.container.minderNode.children[i];
+                                _func(_node);
+                            }
+                            var _func = function(node){
+                                var _node = node.parent;
+                                if(_node != null){
+                                    if(_node.getData("progress")!=9){
+                                        _node.setData("progress", 9);
+                                        var _items = _node.rc.getItems();
+                                        for(var i in _items){
+                                            if(_items[i].__KityClassName == 'ProgressIcon'){
+                                                _items[i].setValue(9);
+                                            }
+                                        }
+                                    }
+                                    if(_node.parent != null){
+                                        _func(_node);
+                                    }
+                                }
+                            }
+                            _func(progress.container.minderNode);
+                        }
+                    }
+                });
+            },
         });
 
         /**

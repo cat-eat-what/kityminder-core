@@ -64,8 +64,9 @@ define(function(require, exports, module) {
             var cmd = this._getCommand(name);
             if (cmd) {
                 var queryCmd = cmd['query' + type];
-                if (queryCmd)
+                if (queryCmd) {
                     return queryCmd.apply(cmd, [this].concat(args));
+                }  
             }
             return 0;
         },

@@ -76,7 +76,6 @@ define(function(require, exports, module) {
                     renderers = renderers.concat(registered[after]);
                 }
             });
-
             node._renderers = renderers.map(function(Renderer) {
                 return new Renderer(node);
             });

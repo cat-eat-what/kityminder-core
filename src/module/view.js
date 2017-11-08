@@ -215,14 +215,12 @@ define(function(require, exports, module) {
         var CameraCommand = kity.createClass('CameraCommand', {
             base: Command,
             execute: function(km, focusNode) {
-
                 focusNode = focusNode || km.getRoot();
                 var viewport = km.getPaper().getViewPort();
                 var offset = focusNode.getRenderContainer().getRenderBox('view');
                 var dx = viewport.center.x - offset.x - offset.width / 2,
-                    dy = viewport.center.y - offset.y;
+                    dy = - offset.y + 10;
                 var dragger = km._viewDragger;
-
                 var duration = km.getOption('viewAnimationDuration');
                 dragger.move(new kity.Point(dx, dy), duration);
                 this.setContentChanged(false);
@@ -308,7 +306,7 @@ define(function(require, exports, module) {
                         me.fire('viewchanged');
                     }, 100);
 
-                    e.preventDefault();
+                    //e.preventDefault();
                 },
                 'normal.dblclick readonly.dblclick': function(e) {
                     if (e.kityEvent.targetShape instanceof kity.Paper) {
@@ -332,7 +330,7 @@ define(function(require, exports, module) {
                         },
                         b = this._lastClientSize;
                     this._viewDragger.move(
-                        new kity.Point((a.width - b.width) / 2 | 0, (a.height - b.height) / 2 | 0));
+                        new kity.Point((a.width - b.width) / 2 | 0, 0));
                     this._lastClientSize = a;
                 },
                 'selectionchange layoutallfinish': function(e) {
