@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2020-07-23
+ * kityminder-uex - v1.4.43 - 2020-07-23
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2020 Baidu FEX; Licensed MIT
