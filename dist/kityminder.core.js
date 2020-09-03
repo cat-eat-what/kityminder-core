@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder-uex - v1.4.43 - 2020-07-23
+ * kityminder-uex - v1.4.44 - 2020-09-03
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2020 Baidu FEX; Licensed MIT
@@ -7721,6 +7721,9 @@ _p[61] = {
                             width: this.getRenderTarget().clientWidth,
                             height: this.getRenderTarget().clientHeight
                         }, b = this._lastClientSize;
+                        if (a.width == 0) {
+                            return;
+                        }
                         this._viewDragger.move(new kity.Point((a.width - b.width) / 2 | 0, 0));
                         this._lastClientSize = a;
                     },

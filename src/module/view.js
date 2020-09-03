@@ -329,6 +329,9 @@ define(function(require, exports, module) {
                             height: this.getRenderTarget().clientHeight
                         },
                         b = this._lastClientSize;
+                    if (a.width == 0) {
+                        return;
+                    }
                     this._viewDragger.move(
                         new kity.Point((a.width - b.width) / 2 | 0, 0));
                     this._lastClientSize = a;
